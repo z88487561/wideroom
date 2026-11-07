@@ -2,11 +2,8 @@
 
 純瀏覽器的全景拼接 PWA，照片不會上傳。可安裝到桌面或手機主畫面，之後完全離線使用。
 
-## 使用方式
-- **直接開檔**：用瀏覽器開啟 `index.html`（可用，但不能安裝成 App、也沒有離線快取）。
-- **PWA（建議）**：把整個資料夾放到任何 https 網站（GitHub Pages、Netlify、Cloudflare Pages 都行），
-  或本機測試用 `python3 -m http.server` 後開 `http://localhost:8000`。
-  瀏覽器網址列會出現「安裝」，頁面右上角也會出現「安裝 App」按鈕。
+## 使用
+https://z88487561.github.io/wideroom/
 
 ## 檔案
 - `stitch-core.js`：拼接演算法（不依賴 DOM，Node 也能跑）

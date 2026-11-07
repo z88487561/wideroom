@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111311">
+    <meta name="description" content="在瀏覽器中將多張照片拼接成全景，不需上傳檔案。">
+    <title>全景拼接室</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="全景拼接室">
+    <link rel="stylesheet" href="styles.css">
+    <script src="stitch-core.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="全景拼接室首頁">
+        <span class="wordmark-mark" aria-hidden="true"></span>
+        <span>WIDE<span class="wordmark-light">ROOM</span></span>
+      </a>
+      <span class="topbar-right">
+        <button id="installButton" class="install-button" type="button" hidden>安裝 App</button>
+        <span class="privacy-note"><span class="privacy-dot"></span>照片只在你的裝置上處理</span>
+      </span>
+    </header>
+
+    <main class="workspace">
+      <section class="intro">
+        <p class="eyebrow">BROWSER PANORAMA STUDIO</p>
+        <h1>把風景，<span>接起來。</span></h1>
+        <p class="intro-copy">選取一組有重疊的照片，拼接室會自動找出順序並完成全景。</p>
+      </section>
+
+      <section class="editor" aria-label="全景拼接工作區">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">01 <span>／</span> 選擇照片</p>
+            <h2>加入全景照片</h2>
+          </div>
+          <span id="photoCount" class="photo-count">0 張照片</span>
+        </div>
+
+        <label id="dropZone" class="drop-zone" for="fileInput">
+          <input id="fileInput" type="file" accept="image/*" multiple>
+          <span class="upload-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 15.5v3A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="drop-title">拖曳照片到這裡</span>
+          <span class="drop-caption">或 <span class="browse-link">瀏覽裝置</span> · JPG、PNG、WebP、HEIC（視瀏覽器支援）</span>
+        </label>
+
+        <div id="photoListWrap" class="photo-list-wrap" hidden>
+          <div class="list-hint">
+            <span>拼接時自動比對排序，也可手動微調</span>
+            <button id="clearButton" class="text-button" type="button">清除全部</button>
+          </div>
+          <ol id="photoList" class="photo-list" aria-label="全景照片順序"></ol>
+          <label class="add-more" for="fileInput">＋ 加入更多照片</label>
+        </div>
+
+        <div class="method-note">
+          <span class="method-icon" aria-hidden="true">✳</span>
+          <p><strong>相機模型校正・多頻段融合</strong><span>估計焦距並整體最佳化每張照片的旋轉，再以動態規劃接縫與多頻段融合減少接縫與重影；照片只在你的裝置上處理。</span></p>
+        </div>
+
+        <div class="options-grid" aria-label="輸出設定">
+          <label class="option-field">
+            <span>投影方式</span>
+            <select id="projectionSelect">
+              <option value="auto">自動（推薦）</option>
+              <option value="perspective">透視</option>
+              <option value="cylindrical">圓柱</option>
+              <option value="panini">Panini（建築友善）</option>
+              <option value="spherical">球面（等距柱狀）</option>
+              <option value="stereographic">立體投影（小行星）</option>
+            </select>
+          </label>
+          <label class="option-field">
+            <span>接縫融合</span>
+            <select id="blendSelect">
+              <option value="normal">標準</option>
+              <option value="sharp">銳利（減少重影）</option>
+              <option value="soft">柔順（接縫更平滑）</option>
+            </select>
+          </label>
+          <label class="option-check"><input id="gainCheck" type="checkbox" checked><span>曝光補償</span></label>
+          <label class="option-check"><input id="cropCheck" type="checkbox" checked><span>自動裁切黑邊</span></label>
+          <label class="option-check"><input id="excludeCheck" type="checkbox" checked><span>智慧排除不符的照片</span></label>
+        </div>
+        <p id="projectionHint" class="option-hint"></p>
+
+        <div class="action-row">
+          <button id="stitchButton" class="primary-button" type="button" disabled>
+            <span>開始拼接</span><span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+          <span class="action-hint">支援 2–32 張 · 相鄰照片需有明顯重疊，不相干的照片會自動排除</span>
+        </div>
+
+        <div id="progressPanel" class="progress-panel" hidden aria-live="polite">
+          <div class="progress-topline"><span id="progressLabel">準備中…</span><span id="progressPercent">0%</span></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+        </div>
+
+        <p id="statusMessage" class="status-message" role="status" hidden></p>
+      </section>
+
+      <section id="resultSection" class="result-section" hidden aria-label="拼接結果">
+        <div class="result-heading">
+          <div>
+            <p class="step-label">02 <span>／</span> 拼接結果</p>
+            <h2>你的全景已完成</h2>
+          </div>
+          <button id="downloadButton" class="download-button" type="button">
+            <span aria-hidden="true">↓</span> 下載 JPG
+          </button>
+        </div>
+        <div class="result-frame">
+          <img id="resultPreview" alt="全景拼接結果預覽">
+          <span class="preview-label">PANORAMA PREVIEW</span>
+        </div>
+        <p id="resultDetails" class="result-details"></p>
+      </section>
+
+      <footer class="footer-note">
+        <span>以純瀏覽器技術製作，不需上傳照片</span>
+        <span>純旋轉拍攝效果最佳；近物大視差、HDR 與 360° 閉環尚未支援</span>
+      </footer>
+    </main>
+  </body>
+</html>

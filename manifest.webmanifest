@@ -1,6 +1,6 @@
 {
   "name": "全景拼接室 WIDEROOM",
-  "short_name": "全景拼接室",
+  "short_name": "全景拼接",
   "description": "在瀏覽器中將多張照片拼接成全景，照片不會上傳。",
   "lang": "zh-Hant",
   "start_url": "./index.html",

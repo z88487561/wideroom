@@ -132,5 +132,75 @@
         <span>純旋轉拍攝效果最佳；近物大視差、HDR 與 360° 閉環尚未支援</span>
       </footer>
     </main>
-  </body>
+  <!-- pwa-manage -->
+<script>
+/* pwa-manage: 安裝按鈕 + 只清除本專案資料的解除功能（同網域有多個 PWA，所以一律依前綴篩選） */
+(function(){
+var C={"name": "全景拼接室 WIDEROOM", "install": false, "ls": [], "idb": [], "cache": ["wideroom-"]};
+if(window.PWAManage)return;
+var dip=null,host,sr,wiping=false;
+var sa=function(){try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
+var ios=function(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)};
+var cap=function(){try{return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}catch(e){return false}};
+var q=function(s){return sr.querySelector(s)};
+if(C.install){
+  addEventListener('beforeinstallprompt',function(e){e.preventDefault();dip=e;upd()});
+  addEventListener('appinstalled',function(){dip=null;upd()});
+}
+function upd(){
+  if(!sr)return;
+  var b=q('#i'),t=q('#t'),s=sa();
+  b.hidden=!(C.install&&dip&&!s);
+  t.textContent=cap()?'App 版本：要移除請到系統設定的應用程式':s?'已安裝（目前以 App 模式開啟）':!C.install?'':dip?'可安裝到桌面／主畫面':ios()?'iPhone／iPad：Safari 分享 → 加入主畫面':'可用瀏覽器選單的「安裝應用程式」（若已安裝，可能偵測不到）';
+}
+function build(){
+  host=document.createElement('div');host.id='pwa-manage';
+  sr=host.attachShadow({mode:'open'});
+  sr.innerHTML='<style>'
+  +':host{all:initial}*{box-sizing:border-box}'
+  +'.f{position:fixed;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:2147483000;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid #8888;background:#000b;color:#fff;font-size:16px;line-height:1;opacity:.45;cursor:pointer}'
+  +'.f:hover,.f:focus-visible{opacity:1}'
+  +'.m{position:fixed;inset:0;z-index:2147483001;background:#0008;display:none;align-items:center;justify-content:center;padding:16px}.m.o{display:flex}'
+  +'.p{background:#1b222a;color:#e6ebf0;border:1px solid #33404d;border-radius:14px;padding:16px;width:min(380px,100%);font:14px/1.55 system-ui,"Noto Sans TC",sans-serif}'
+  +'h2{margin:0 0 6px;font-size:16px}.n{color:#9aa7b4;font-size:12.5px;margin:8px 0 0}.n:empty{display:none}'
+  +'.r{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}'
+  +'button.b{font:inherit;color:#e6ebf0;background:#26303a;border:1px solid #3a4756;border-radius:10px;padding:9px 12px;cursor:pointer}'
+  +'button.b[hidden]{display:none}.b.p1{background:#5ad1c4;border-color:#5ad1c4;color:#06201d}.b.d{background:#ff5a4f;border-color:#ff5a4f;color:#fff}'
+  +'</style>'
+  +(C.fab===false?'':'<button class="f" id="f" aria-label="App 安裝與資料管理" title="App 安裝與資料管理">⚙</button>')
+  +'<div class="m" id="m"><div class="p" role="dialog" aria-modal="true" aria-labelledby="h"><h2 id="h"></h2><div id="t"></div>'
+  +'<div class="r"><button class="b p1" id="i" hidden>📲 安裝到桌面／主畫面</button><button class="b d" id="w">🗑️ 清除資料並解除安裝</button><button class="b" id="c">關閉</button></div>'
+  +'<div class="n">網頁無法自行移除圖示：清除後請長按圖示刪除（電腦版 Chrome：App 視窗選單 → 解除安裝）。只會清除本程式的資料，不影響同網站下的其他 App。</div></div></div>';
+  q('#h').textContent=C.name;
+  var f=q('#f');if(f)f.onclick=open;
+  q('#c').onclick=close;
+  q('#m').onclick=function(e){if(e.target.id==='m')close()};
+  q('#i').onclick=function(){if(!dip)return;try{dip.prompt();dip.userChoice&&dip.userChoice.then(function(){dip=null;upd()},function(){})}catch(e){}};
+  q('#w').onclick=function(){
+    var msg='將清除「'+C.name+'」在這個裝置上的資料（設定、紀錄、離線快取）。\n'+(C.warn?C.warn+'\n':'')+'清除後無法復原；同網站下的其他 App 不受影響。\n\n確定要清除？';
+    if(confirm(msg))wipe();
+  };
+  addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+  document.body.appendChild(host);upd();
+}
+function open(){if(!sr)return;upd();q('#m').classList.add('o')}
+function close(){if(sr)q('#m').classList.remove('o')}
+async function wipe(){
+  if(wiping)return;wiping=true;
+  // 先擋住之後的寫入，避免清完又被頁面寫回
+  try{Storage.prototype.setItem=function(){}}catch(e){}
+  try{IDBFactory.prototype.open=function(){throw new Error('wiped')}}catch(e){}
+  try{document.querySelectorAll('video,audio').forEach(function(v){try{v.pause()}catch(e){}var s=v.srcObject;if(s&&s.getTracks)s.getTracks().forEach(function(t){t.stop()})})}catch(e){}
+  var jobs=(C.idb||[]).map(function(n){return new Promise(function(r){try{var d=indexedDB.deleteDatabase(n);d.onsuccess=d.onerror=d.onblocked=function(){r()}}catch(e){r()}})});
+  try{Object.keys(localStorage).filter(function(k){return (C.ls||[]).some(function(p){return k.indexOf(p)===0})}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+  try{if(window.caches){var ks=await caches.keys();for(var i=0;i<ks.length;i++){if((C.cache||[]).some(function(p){return ks[i].indexOf(p)===0}))await caches.delete(ks[i])}}}catch(e){}
+  try{if(navigator.serviceWorker){var r=await navigator.serviceWorker.getRegistration();if(r)await r.unregister()}}catch(e){}
+  await Promise.all(jobs);
+  document.body.innerHTML='<div style="padding:32px 20px;text-align:center;line-height:1.7;font:16px system-ui,sans-serif;color:#222"><h2>已清除「'+C.name.replace(/[<&]/g,'')+'」的資料</h2><p>請關閉這個視窗，並從桌面／主畫面長按圖示刪除。<br>再次開啟網址即可重新使用。</p></div>';
+}
+window.PWAManage={open:open,close:close};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+})();
+</script>
+</body>
 </html>

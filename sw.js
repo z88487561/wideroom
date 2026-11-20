@@ -1,6 +1,6 @@
 // 全景拼接室 service worker：預先快取所有靜態檔案，之後完全離線可用。
 // 更新程式碼時請把 VERSION 加 1，舊快取會在啟用時清除。
-const VERSION = "wideroom-v3";
+const VERSION = "wideroom-v4";
 const ASSETS = [
   "./",
   "./index.html",
